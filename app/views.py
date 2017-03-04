@@ -30,7 +30,7 @@ def add_file():
     if not session.get('logged_in'):
         abort(401)
 
-    file_folder = ''
+    file_folder = app.config["UPLOAD_FOLDER"]
 
     if request.method == 'POST':
         file = request.files['file']
@@ -41,29 +41,51 @@ def add_file():
         return redirect(url_for('home'))
 
     return render_template('add_file.html')
+    
+    
+@app.route("/filelisting")
+def iterateFile():
+    if not session.get("logged_in"):
+        abort(401)
+    filelist = []
+    jpglist = []
+        
+    rootdir = os.getcwd()
+    print rootdir
+    for subdir, dirs, files in os.walk(rootdir + "/app/static/uploads"):
+        for file in files:
+            if file.lower().endswith(".jpg"):
+                jpglist = jpglist + [file]
+            else:
+                filelist = filelist + [file]
+            # [os.path.join(subdir,file)]
+
+    return render_template("filelisting.html", jpglist =  jpglist, files = filelist)
+            
+            
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     error = None
     if request.method == 'POST':
         if request.form['username'] != app.config['USERNAME'] or request.form['password'] != app.config['PASSWORD']:
-            error = 'Invalid username or password'
+            error = 'Your username or password was invalid!'
         else:
             session['logged_in'] = True
             
-            flash('You were logged in')
+            flash('You were successfully logged in!')
             return redirect(url_for('add_file'))
     return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
-    flash('You were logged out')
+    flash('Sorry, You were logged out!')
     return redirect(url_for('home'))
 
 
 ###
-# The functions below should be applicable to all Flask apps.
+#Applicable to all Flask 
 ###
 
 @app.route('/<file_name>.txt')
